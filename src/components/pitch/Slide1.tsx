@@ -31,10 +31,10 @@ export default function Slide1() {
               className="w-full"
               priority
             />
-            {/* Red heart overlay */}
+            {/* Red heart overlay - sized to fit within the white outline heart */}
             <svg
               className="absolute"
-              style={{ top: "44.5%", right: "5.5%", width: "24px", height: "24px" }}
+              style={{ top: "45.2%", right: "6.2%", width: "16px", height: "16px" }}
               viewBox="0 0 24 24"
               fill="#F44752"
             >
