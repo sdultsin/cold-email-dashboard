@@ -2,7 +2,7 @@
 
 import type { SystemHealth } from "@/types/dashboard";
 
-type Tab = "recommendations" | "alerts" | "explore";
+type Tab = "recommendations" | "alerts" | "explore" | "the-math";
 
 interface TopBarProps {
   activeTab: Tab;
@@ -15,6 +15,7 @@ const tabs: { key: Tab; label: string }[] = [
   { key: "recommendations", label: "Recommendations" },
   { key: "alerts", label: "Alerts" },
   { key: "explore", label: "Explore" },
+  { key: "the-math", label: "The Math" },
 ];
 
 export default function TopBar({

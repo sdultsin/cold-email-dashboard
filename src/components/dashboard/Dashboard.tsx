@@ -6,8 +6,9 @@ import TopBar from "./TopBar";
 import RecommendationsTab from "./RecommendationsTab";
 import AlertsTab from "./AlertsTab";
 import ExploreTab from "./ExploreTab";
+import TheMathTab from "./TheMathTab";
 
-type Tab = "recommendations" | "alerts" | "explore";
+type Tab = "recommendations" | "alerts" | "explore" | "the-math";
 
 interface DashboardProps {
   chatOpen: boolean;
@@ -46,6 +47,7 @@ export default function Dashboard({ chatOpen, onToggleChat }: DashboardProps) {
         {activeTab === "recommendations" && <RecommendationsTab stories={data.stories} />}
         {activeTab === "alerts" && <AlertsTab alerts={data.alerts} />}
         {activeTab === "explore" && <ExploreTab data={data} />}
+        {activeTab === "the-math" && <TheMathTab />}
       </main>
     </div>
   );
