@@ -3,11 +3,9 @@
 import { useState, useRef } from "react";
 import PitchDeck from "@/components/pitch/PitchDeck";
 import Dashboard from "@/components/dashboard/Dashboard";
-import ChatDrawer from "@/components/chat/ChatDrawer";
 
 export default function Home() {
   const [showDashboard, setShowDashboard] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
 
   const handleEnterDashboard = () => {
@@ -22,12 +20,9 @@ export default function Home() {
       <PitchDeck onEnterDashboard={handleEnterDashboard} />
 
       {showDashboard && (
-        <>
-          <div ref={dashboardRef}>
-            <Dashboard chatOpen={chatOpen} onToggleChat={() => setChatOpen(!chatOpen)} />
-          </div>
-          <ChatDrawer isOpen={chatOpen} onClose={() => setChatOpen(false)} />
-        </>
+        <div ref={dashboardRef}>
+          <Dashboard />
+        </div>
       )}
     </main>
   );

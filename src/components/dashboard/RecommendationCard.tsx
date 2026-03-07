@@ -24,6 +24,7 @@ interface RecommendationCardProps {
 export default function RecommendationCard({ story }: RecommendationCardProps) {
   const [status, setStatus] = useState(story.status);
   const [dismissed, setDismissed] = useState(false);
+  const [approved, setApproved] = useState(false);
 
   if (dismissed) return null;
 
@@ -58,21 +59,28 @@ export default function RecommendationCard({ story }: RecommendationCardProps) {
       {/* Counterfactual */}
       <p className="text-xs text-[#666666] italic mb-4">{story.counterfactual}</p>
 
-      {/* Action buttons for action_needed */}
-      {status === "action_needed" && (
+      {/* Action buttons on every card */}
+      {!approved ? (
         <div className="flex gap-3">
           <button
-            onClick={() => setStatus("auto_applied")}
-            className="px-4 py-1.5 text-sm font-medium rounded-md bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors"
+            onClick={() => { setStatus("auto_applied"); setApproved(true); }}
+            className="px-4 py-1.5 text-sm font-medium rounded-md bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors cursor-pointer"
           >
             Approve
           </button>
           <button
             onClick={() => setDismissed(true)}
-            className="px-4 py-1.5 text-sm font-medium rounded-md border border-[#333333] text-[#888888] hover:text-[#ededed] hover:border-[#555555] transition-colors"
+            className="px-4 py-1.5 text-sm font-medium rounded-md border border-[#333333] text-[#888888] hover:text-[#ededed] hover:border-[#555555] transition-colors cursor-pointer"
           >
             Dismiss
           </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-sm text-[#22c55e]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Approved
         </div>
       )}
     </div>

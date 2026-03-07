@@ -4,18 +4,11 @@ import { useState } from "react";
 import { useDashboardData } from "@/lib/data";
 import TopBar from "./TopBar";
 import RecommendationsTab from "./RecommendationsTab";
-import AlertsTab from "./AlertsTab";
 import ExploreTab from "./ExploreTab";
-import TheMathTab from "./TheMathTab";
 
-type Tab = "recommendations" | "alerts" | "explore" | "the-math";
+type Tab = "recommendations" | "explore";
 
-interface DashboardProps {
-  chatOpen: boolean;
-  onToggleChat: () => void;
-}
-
-export default function Dashboard({ chatOpen, onToggleChat }: DashboardProps) {
+export default function Dashboard() {
   const { data, loading, error } = useDashboardData();
   const [activeTab, setActiveTab] = useState<Tab>("recommendations");
 
@@ -40,14 +33,10 @@ export default function Dashboard({ chatOpen, onToggleChat }: DashboardProps) {
       <TopBar
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onToggleChat={onToggleChat}
-        systemHealth={data.system_health}
       />
       <main>
         {activeTab === "recommendations" && <RecommendationsTab stories={data.stories} />}
-        {activeTab === "alerts" && <AlertsTab alerts={data.alerts} />}
         {activeTab === "explore" && <ExploreTab data={data} />}
-        {activeTab === "the-math" && <TheMathTab />}
       </main>
     </div>
   );
