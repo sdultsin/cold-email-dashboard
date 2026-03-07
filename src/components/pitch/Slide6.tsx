@@ -32,11 +32,11 @@ export default function Slide6() {
         <div
           className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 opacity-50 transition-all duration-700"
           style={{
-            opacity: isInView ? 0.5 : 0,
+            opacity: isInView ? 0.7 : 0,
             transform: isInView ? "translateX(0)" : "translateX(-24px)",
           }}
         >
-          <h3 className="mb-4 text-lg font-semibold text-zinc-400">
+          <h3 className="mb-4 text-lg font-semibold text-zinc-300">
             Without feedback loops
           </h3>
           <ul className="space-y-3">
@@ -92,8 +92,7 @@ export default function Slide6() {
           transition: "opacity 600ms 1200ms",
         }}
       >
-        The difference isn&apos;t better math. It&apos;s using all the data
-        you&apos;re already generating.
+        You already generate all this data. The question is how you use it.
       </p>
 
       <DownArrow />

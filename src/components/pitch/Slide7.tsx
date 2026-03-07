@@ -20,7 +20,7 @@ export default function Slide7({ onEnterDashboard }: Slide7Props) {
         }`}
       >
         <p className="text-lg leading-relaxed text-[#ededed]/80">
-          We ran 120,000 cold emails through 10 industries, 11 company sizes,
+          We ran 1.2 million cold emails through 10 industries, 11 company sizes,
           and 7 buyer personas over 12 simulated months.
         </p>
 

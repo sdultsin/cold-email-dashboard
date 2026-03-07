@@ -6,7 +6,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent.parent / "Claude Code" / "Coworker.ai" / "Cold Email Feedback Loop" / "simulation" / "results" / "scenario_baseline.db"
+DB_PATH = Path(__file__).parent.parent.parent / "Claude Code" / "Coworker.ai" / "Cold Email Feedback Loop" / "simulation" / "results" / "simulation.db"
 OUTPUT_PATH = Path(__file__).parent.parent / "public" / "data" / "dashboard.json"
 
 
@@ -78,7 +78,6 @@ def extract(db_path: str, output_path: str):
         })
 
     # --- System health ---
-    # Compute optimization status from industry-level segments
     override_segments = set()
     loop3_segments = set()
     loop2_only_segments = set()
@@ -90,7 +89,6 @@ def extract(db_path: str, output_path: str):
             loop2_only_segments.add(seg)
         override_segments.add(seg)
 
-    # Industry-level segments with Loop3 confirmation = optimized
     industries_optimized = set()
     industries_stabilizing = set()
     for seg in loop3_segments:
@@ -105,7 +103,6 @@ def extract(db_path: str, output_path: str):
     all_industries = set(meta["industries"])
     industries_learning = all_industries - industries_optimized - industries_stabilizing
 
-    # Overrides this quarter (months 10-12)
     q4_overrides = len([o for o in overrides if o["month"] >= 10])
 
     system_health = {
@@ -164,7 +161,7 @@ def extract(db_path: str, output_path: str):
         if wildcards == 3 or sk == "*::*::*":
             data["data_source"] = "global"
         elif wildcards == 0:
-            if total_replies >= 15:
+            if total_replies >= 50:
                 data["data_source"] = "segment_specific"
             else:
                 data["data_source"] = "borrowing_from_parent"
@@ -222,106 +219,106 @@ def _build_stories(c, templates):
 
     stories = []
 
-    # Story 1: SaaS Revenue Trap
-    seq9_saas = get_row("seq_9", "saas::*::*")
-    seq7_saas = get_row("seq_7", "saas::*::*")
+    # Story 1: SaaS Reply vs Revenue
+    seq6_saas = get_row("seq_6", "saas::*::*")
+    seq1_saas = get_row("seq_1", "saas::*::*")
     stories.append({
         "id": "saas-revenue-trap",
         "status": "auto_applied",
-        "headline": "Your highest-reply template in SaaS has generated $0 in revenue",
+        "headline": "SaaS reply rate leader generates half the revenue of a template with fewer replies",
         "comparison": {
             "loser": {
-                "sequence_id": "seq_9",
-                "label": templates["seq_9"]["label"],
-                "reply_rate": seq9_saas["reply_rate"],
-                "demo_rate": seq9_saas["demo_rate"],
-                "revenue_per_send": seq9_saas["revenue_per_send"],
-                "n_sends": seq9_saas["n_sends"],
+                "sequence_id": "seq_6",
+                "label": templates["seq_6"]["label"],
+                "reply_rate": seq6_saas["reply_rate"],
+                "demo_rate": seq6_saas["demo_rate"],
+                "revenue_per_send": seq6_saas["revenue_per_send"],
+                "n_sends": seq6_saas["n_sends"],
             },
             "winner": {
-                "sequence_id": "seq_7",
-                "label": templates["seq_7"]["label"],
-                "reply_rate": seq7_saas["reply_rate"],
-                "demo_rate": seq7_saas["demo_rate"],
-                "revenue_per_send": seq7_saas["revenue_per_send"],
-                "n_sends": seq7_saas["n_sends"],
+                "sequence_id": "seq_1",
+                "label": templates["seq_1"]["label"],
+                "reply_rate": seq1_saas["reply_rate"],
+                "demo_rate": seq1_saas["demo_rate"],
+                "revenue_per_send": seq1_saas["revenue_per_send"],
+                "n_sends": seq1_saas["n_sends"],
             },
         },
-        "explanation": "Template 9 leads SaaS on reply rate by over 2x - but after 127 sends across 12 months, zero closed deals. Template 7 has less than half the reply rate but generates $108.84 in revenue for every email sent. The formal value offer gets attention but attracts tire-kickers. The consultative urgency with pain point hook attracts fewer but higher-quality leads who close.",
-        "counterfactual": "Without this, you'd scale a 7.9% reply rate campaign that produces meetings but never closes.",
+        "explanation": "Template 6 leads SaaS on reply rate at 5.04% - but Template 1, with 25% fewer replies, generates $35.53 in revenue per send vs Template 6's $18.68. The direct question hook gets attention but attracts evaluators. The direct social proof hook attracts fewer but higher-quality leads who actually close deals.",
+        "counterfactual": "Without this, you'd scale the highest-reply template and leave $16.85 per send on the table.",
         "override_source": "Loop 3 revenue veto, month 12",
         "segment": "SaaS (all sizes, all titles)",
     })
 
-    # Story 2: Global Best Template Override
-    seq0_global = get_row("seq_0", "*::*::*")
-    seq4_global = get_row("seq_4", "*::*::*")
+    # Story 2: Manufacturing Hidden Revenue Winner
+    seq0_mfg = get_row("seq_0", "manufacturing::*::*")
+    seq4_mfg = get_row("seq_4", "manufacturing::*::*")
     stories.append({
-        "id": "global-override",
+        "id": "manufacturing-hidden-winner",
         "status": "auto_applied",
-        "headline": "System overrode your top-performing campaign - it was costing you revenue",
+        "headline": "In manufacturing, the template with 7x more sends generates 3x less revenue per send",
         "comparison": {
             "loser": {
                 "sequence_id": "seq_0",
                 "label": templates["seq_0"]["label"],
-                "reply_rate": seq0_global["reply_rate"],
-                "close_rate": seq0_global["close_rate"],
-                "revenue_per_send": seq0_global["revenue_per_send"],
-                "n_sends": seq0_global["n_sends"],
+                "reply_rate": seq0_mfg["reply_rate"],
+                "close_rate": seq0_mfg["close_rate"],
+                "revenue_per_send": seq0_mfg["revenue_per_send"],
+                "n_sends": seq0_mfg["n_sends"],
             },
             "winner": {
                 "sequence_id": "seq_4",
                 "label": templates["seq_4"]["label"],
-                "reply_rate": seq4_global["reply_rate"],
-                "close_rate": seq4_global["close_rate"],
-                "revenue_per_send": seq4_global["revenue_per_send"],
-                "n_sends": seq4_global["n_sends"],
+                "reply_rate": seq4_mfg["reply_rate"],
+                "close_rate": seq4_mfg["close_rate"],
+                "revenue_per_send": seq4_mfg["revenue_per_send"],
+                "n_sends": seq4_mfg["n_sends"],
             },
         },
-        "explanation": "Across all segments, Template 0 has the highest reply rate and received nearly 3x the send volume. But Template 4 generates 1.85x more revenue per send. Both use a consultative tone with a direct ask - the difference is the hook. Stat leads close better than open questions, even though questions get more replies.",
-        "counterfactual": "Without this, you'd keep sending your most popular template and leave $13.75 per send on the table.",
+        "explanation": "Template 0 received 44,663 sends in manufacturing - 7x more than Template 4's 6,434. Simpson's Paradox at work: Template 0 got disproportionate volume because of high-reply-rate segments. But Template 4 generates $44.05 in revenue per send vs Template 0's $15.33. The stat lead hook converts manufacturing prospects to closed deals far more effectively than the question hook.",
+        "counterfactual": "Without segment-level analysis, you'd keep scaling the template with the most sends and miss a 2.9x revenue multiplier.",
         "override_source": "Loop 3 revenue veto, month 12",
-        "segment": "All segments (global)",
+        "segment": "Manufacturing (all sizes, all titles)",
     })
 
-    # Story 3: Fintech Hidden Winner
-    seq5_fin = get_row("seq_5", "fintech::*::*")
-    seq9_fin = get_row("seq_9", "fintech::*::*")
+    # Story 3: Fintech Reply Trap
+    seq3_fin = get_row("seq_3", "fintech::*::*")
+    seq7_fin = get_row("seq_7", "fintech::*::*")
     stories.append({
         "id": "fintech-hidden-winner",
         "status": "auto_applied",
-        "headline": "In fintech, your 5th-ranked template is your most profitable by 3x",
+        "headline": "In fintech, your reply rate leader generates 3x less revenue than a lower-ranked template",
         "comparison": {
-            "winner": {
-                "sequence_id": "seq_5",
-                "label": templates["seq_5"]["label"],
-                "reply_rate": seq5_fin["reply_rate"],
-                "close_rate": seq5_fin["close_rate"],
-                "revenue_per_send": seq5_fin["revenue_per_send"],
-                "n_sends": seq5_fin["n_sends"],
-            },
             "loser": {
-                "sequence_id": "seq_9",
-                "label": templates["seq_9"]["label"],
-                "reply_rate": seq9_fin["reply_rate"],
-                "close_rate": seq9_fin["close_rate"],
-                "revenue_per_send": seq9_fin["revenue_per_send"],
-                "n_sends": seq9_fin["n_sends"],
+                "sequence_id": "seq_3",
+                "label": templates["seq_3"]["label"],
+                "reply_rate": seq3_fin["reply_rate"],
+                "close_rate": seq3_fin["close_rate"],
+                "revenue_per_send": seq3_fin["revenue_per_send"],
+                "n_sends": seq3_fin["n_sends"],
+            },
+            "winner": {
+                "sequence_id": "seq_7",
+                "label": templates["seq_7"]["label"],
+                "reply_rate": seq7_fin["reply_rate"],
+                "close_rate": seq7_fin["close_rate"],
+                "revenue_per_send": seq7_fin["revenue_per_send"],
+                "n_sends": seq7_fin["n_sends"],
             },
         },
-        "explanation": "In fintech, the pain point approach with urgency CTA gets fewer responses but the leads who respond are higher quality and close at larger deal sizes. The formal value offer gets attention but attracts tire-kickers. This took 8 months to surface because fintech deal cycles average 6-8 weeks.",
-        "counterfactual": "Reply rate alone would have you scaling a template that produces 3x less revenue.",
+        "explanation": "In fintech, Template 3 leads reply rate at 3.56% but generates only $5.70 per send. Template 7 has a 2.27% reply rate - 36% fewer replies - but generates $15.97 per send. The consultative urgency approach with pain point hook gets fewer responses but the leads who respond are decision-makers feeling the problem, not researchers browsing solutions. This took 8 months to surface because fintech deal cycles average 6-8 weeks.",
+        "counterfactual": "Reply rate alone would have you scaling a template that produces 2.8x less revenue.",
         "override_source": "Loop 3 revenue veto, month 12",
         "segment": "Fintech (all sizes, all titles)",
     })
 
     # Story 4: Manufacturing Demo Override
     seq6_mfg = get_row("seq_6", "manufacturing::*::*")
-    seq1_mfg = get_row("seq_1", "manufacturing::*::*")
+    seq4_mfg_demo = get_row("seq_4", "manufacturing::*::*")
     stories.append({
         "id": "manufacturing-demo-override",
         "status": "auto_applied",
-        "headline": "Reply rate leader in manufacturing books the fewest demos",
+        "headline": "Reply rate leader in manufacturing books half the demos of the revenue winner",
         "comparison": {
             "loser": {
                 "sequence_id": "seq_6",
@@ -331,16 +328,16 @@ def _build_stories(c, templates):
                 "n_sends": seq6_mfg["n_sends"],
             },
             "winner": {
-                "sequence_id": "seq_1",
-                "label": templates["seq_1"]["label"],
-                "reply_rate": seq1_mfg["reply_rate"],
-                "demo_rate": seq1_mfg["demo_rate"],
-                "n_sends": seq1_mfg["n_sends"],
+                "sequence_id": "seq_4",
+                "label": templates["seq_4"]["label"],
+                "reply_rate": seq4_mfg_demo["reply_rate"],
+                "demo_rate": seq4_mfg_demo["demo_rate"],
+                "n_sends": seq4_mfg_demo["n_sends"],
             },
         },
-        "explanation": "In manufacturing, Template 6 edges out Template 1 on reply rate. But Template 1 books 2.5x more demos per send. Both use a direct tone - the difference is that social proof hooks convert to meetings better than compliment hooks in manufacturing.",
-        "counterfactual": "You'd optimize for the template getting more replies while the one next to it books 2.5x more meetings.",
-        "override_source": "Loop 2 demo-rate override, month 12",
+        "explanation": "In manufacturing, Template 6 leads on reply rate at 4.59%. But Template 4 books demos at 0.92% per send - 2.4x the rate of Template 6's 0.38%. Both get a reasonable number of replies but the consultative stat lead converts manufacturing prospects to meetings far more effectively than the direct question approach. Manufacturing buyers respond to data, not questions.",
+        "counterfactual": "You'd optimize for the template getting more replies while another template books 2.4x more meetings and generates 6.5x more revenue.",
+        "override_source": "Loop 2 demo-rate override + Loop 3 revenue veto",
         "segment": "Manufacturing (all sizes, all titles)",
     })
 
@@ -348,19 +345,22 @@ def _build_stories(c, templates):
     c.execute("""SELECT SUM(n_sends) as total, SUM(n_sends * reply_rate) as replies
                  FROM feature_store WHERE segment_key='trucking::10001+::*'""")
     trucking_ent = c.fetchone()
+    trucking_sends = int(trucking_ent["total"]) if trucking_ent["total"] else 0
+    trucking_replies = int(trucking_ent["replies"]) if trucking_ent["replies"] else 0
+    data_pct = round(trucking_replies / 50 * 100) if trucking_replies else 0
     stories.append({
         "id": "trucking-enterprise-data-gap",
         "status": "monitoring",
         "headline": "Trucking enterprise: not enough data for real conclusions",
         "evidence": {
             "segment": "Trucking, 10,001+ employees",
-            "total_sends": int(trucking_ent["total"]) if trucking_ent["total"] else 0,
-            "reply_events": int(trucking_ent["replies"]) if trucking_ent["replies"] else 0,
+            "total_sends": trucking_sends,
+            "reply_events": trucking_replies,
             "templates_tested": 9,
-            "data_needed_pct": 2,
+            "data_needed_pct": data_pct,
         },
-        "explanation": "With 108 total sends and 1 reply, any recommendation here would be noise. The system is borrowing from the trucking industry-wide model and the global parent model. Currently at about 2% of the data needed for confidence.",
-        "counterfactual": "Most platforms would show you a reply rate for this segment without mentioning it's based on 1 reply out of 108 sends.",
+        "explanation": f"With {trucking_sends} total sends and {trucking_replies} replies across 1.2 million emails, any recommendation here would be noise. The system is borrowing from the trucking industry-wide model and the global parent model. Currently at about {data_pct}% of the data needed for segment-specific confidence.",
+        "counterfactual": f"Most platforms would show you a reply rate for this segment without mentioning it's based on {trucking_replies} replies out of {trucking_sends} sends.",
     })
 
     # Story 6: Underexplored Industries
@@ -378,9 +378,9 @@ def _build_stories(c, templates):
     stories.append({
         "id": "underexplored-industries",
         "status": "action_needed",
-        "headline": "Recommend expanding test volume in 3 underexplored industries",
+        "headline": "Three industries still have wide confidence intervals despite 1.2M total sends",
         "evidence": {"industries": underexplored},
-        "explanation": "These three industries have not generated enough downstream data for the system to identify which templates actually work. Allocating 15% of next month's volume to these segments would accelerate learning by an estimated 2 months.",
+        "explanation": "Trucking received only 18K sends due to market size. Ecommerce got 239K sends but at 0.75% reply rate, downstream data (demos, deals) remains sparse. Insurance at 30K sends and 1.89% reply rate is in between. The system has enough reply data to rank templates but insufficient deal data to confirm revenue winners in these segments.",
         "counterfactual": "Without proactive rebalancing, these segments stay in guessing mode indefinitely while you over-invest in segments you've already figured out.",
     })
 
@@ -393,26 +393,26 @@ def _build_alerts():
         {
             "id": "saas-revenue-veto",
             "type": "override_explanation",
-            "title": "Why Template 9's 7.9% reply rate means nothing in SaaS",
+            "title": "Why SaaS reply rate leader isn't the revenue winner",
             "body": [
-                "Loop 1 (reply analysis) flagged Template 9 as the standout performer in SaaS. At 7.87% reply rate, it more than doubled the segment average of 3.5%. Any sending platform would tell you to scale this immediately.",
-                "Loop 2 (demo analysis) started raising questions at month 6. Template 9 was booking demos at 1.57% - decent, but the ratio of replies-to-demos was off. Template 9 was generating interest but not the right kind.",
-                "Loop 3 (revenue analysis) confirmed it at month 12. After 12 months, Template 9 has closed zero deals in SaaS. Zero. Meanwhile, Template 7 - with less than half the reply rate - has generated $108.84 in revenue per send.",
-                "The likely explanation: Template 9 uses a formal value offer with mutual connection hook. In SaaS, this gets responses but attracts evaluators and researchers, not decision-makers. Template 7 uses consultative urgency with a pain point hook - fewer people respond, but the ones who do are feeling the problem and ready to act.",
+                "Loop 1 (reply analysis) flagged Template 6 as the standout performer in SaaS. At 5.04% reply rate, it led all templates in the segment. Any sending platform would tell you to scale this immediately.",
+                "Loop 2 (demo analysis) started raising questions at month 6. Template 6 was booking demos at 0.39% - but Template 1, with 25% fewer replies, was booking at 0.47%.",
+                "Loop 3 (revenue analysis) confirmed it at month 12. Template 1 generates $35.53 in revenue per send vs Template 6's $18.68 - a 1.9x difference. The direct social proof hook attracts fewer but higher-quality leads who close bigger deals.",
+                "The likely explanation: Template 6 uses a direct question hook. In SaaS, questions get responses from evaluators and researchers. Template 1 uses social proof - fewer people respond, but the ones who do are already comparing solutions and ready to buy.",
             ],
-            "technical_detail": "Override source: Loop 3 revenue veto (override_log id=23). seq_7 revenue_per_send=$108.84 vs seq_9 revenue_per_send=$0.00 across 17 closed deals in SaaS. Demo weight at time of override: 0.82. Temporal censoring ensured sends from months 10-12 were excluded from close-rate calculations.",
+            "technical_detail": "Override source: Loop 3 revenue veto. seq_1 revenue_per_send=$35.53 vs seq_6 revenue_per_send=$18.68 across 19,958 and 19,889 sends respectively. Bayesian shrinkage lambda=300 for reply events.",
         },
         {
             "id": "simpsons-paradox",
             "type": "statistical_trap",
             "title": "Why aggregate reply rates lie - and how the system avoids it",
             "body": [
-                "If you look at Template 0's overall reply rate (4.15%), it appears to be the clear winner across all campaigns. It received the most volume (27,923 sends) and has the highest reply rate globally.",
-                "But this is a statistical trap called Simpson's Paradox. Template 0 was disproportionately sent to segments that naturally reply at higher rates - SaaS (4.2% base rate) and manufacturing (4.6% base rate). Meanwhile, Template 4 was sent to harder segments like e-commerce (0.87% base rate).",
-                "When you compare them within the same segment, the gap narrows dramatically. And on the metric that actually matters - revenue per send - Template 4 wins by 1.85x ($30.02 vs $16.27).",
+                "If you look at Template 0's overall reply rate (4.05%), it appears to be the clear winner across all campaigns. It received the most volume (282,290 sends) and has the highest reply rate globally.",
+                "But this is a statistical trap called Simpson's Paradox. Template 0 was disproportionately sent to segments that naturally reply at higher rates - SaaS (4.3% base rate) and manufacturing (4.5% base rate). Meanwhile, other templates were distributed more evenly across harder segments like ecommerce (0.6% base rate).",
+                "When you compare within specific segments, other templates often win. In manufacturing, Template 4 generates $44.05 per send vs Template 0's $15.33. In SaaS, Template 1 generates $35.53 vs Template 0's $25.31.",
                 "The system never ranks templates by aggregate metrics. Every comparison happens within a segment, so volume distribution can't distort the picture.",
             ],
-            "technical_detail": "Simpson's Paradox occurs when a trend in aggregate data reverses when split by a confounding variable. The system uses segment-level rankings exclusively, with Bayesian shrinkage toward the parent model (lambda=100 for reply events).",
+            "technical_detail": "Simpson's Paradox occurs when a trend in aggregate data reverses when split by a confounding variable. The system uses segment-level rankings exclusively, with Bayesian shrinkage toward the parent model (lambda=300 for reply events).",
         },
         {
             "id": "seasonal-non-alarm",
@@ -429,14 +429,14 @@ def _build_alerts():
         {
             "id": "manufacturing-demo-divergence",
             "type": "override_explanation",
-            "title": "In manufacturing, the best-replying template books the worst demos",
+            "title": "In manufacturing, the best-replying template books the fewest demos",
             "body": [
                 "Manufacturing is one of the clearest examples of why reply rate is a misleading proxy.",
-                "Template 6 (question/direct/compliment) leads on reply rate at 5.26%. Template 1 (urgency/direct/social_proof) is close behind at 4.79%. On a standard dashboard, you'd pick Template 6.",
-                "But at month 6, when enough demo-booking data had accumulated, the system found Template 1 books demos at 1.12% per send - 2.5x the rate of Template 6's 0.45%.",
-                "Both templates use a direct tone. The difference is the hook: social proof converts manufacturing prospects to meetings far more effectively than compliments. Manufacturing buyers respond to peer validation, not flattery.",
+                "Template 6 (question/direct) leads on reply rate at 4.59%. Template 4 (consultative/stat_lead) sits at 3.45%. On a standard dashboard, you'd pick Template 6.",
+                "But at month 6, when enough demo-booking data had accumulated, the system found Template 4 books demos at 0.92% per send - 2.4x the rate of Template 6's 0.38%. By month 12, Template 4 generates $44.05 per send vs Template 6's $6.79.",
+                "Both templates get responses from manufacturing prospects. The difference is the hook: stat leads convert to meetings and deals far more effectively than questions. Manufacturing buyers respond to data and peer benchmarks, not open-ended questions.",
             ],
-            "technical_detail": "Loop 2 demo-rate override at month 6 (id=6). demo_weight=0.43 at first override, rising to 0.58 by month 12 (id=15). Bayesian weight: demo_weight = n_demo_events / (n_demo_events + 50).",
+            "technical_detail": "Loop 2 demo-rate override + Loop 3 revenue veto. seq_4 demo_rate=0.92% vs seq_6 demo_rate=0.38%. seq_4 revenue_per_send=$44.05 vs seq_6=$6.79. Bayesian shrinkage lambda_demo=150.",
         },
         {
             "id": "temporal-censoring",
@@ -457,10 +457,10 @@ def _build_alerts():
             "body": [
                 "When a campaign gets stopped early, most platforms remove it from reporting. The sends it produced vanish from analytics.",
                 "This creates survivorship bias. You only see data from campaigns that ran long enough, skewing your picture of what works.",
-                "The system retains all data from stopped campaigns. Template 9 in SaaS received only 127 sends compared to 1,400+ for others. Its data still contributes to the model, weighted appropriately.",
-                "The Bayesian framework handles this naturally: low-volume templates lean heavily on the parent model. No data is thrown away.",
+                "The system retains all data from stopped campaigns. Template 9 was capped at 2% volume in months 1-2, then stopped entirely. Across all segments it received only ~2,900 sends compared to 97,000+ for active templates. Its data still contributes to the model, weighted appropriately.",
+                "The Bayesian framework handles this naturally: low-volume templates lean heavily on the parent model. No data is thrown away. In both SaaS (606 sends) and fintech (464 sends), Template 9 generated $0 in revenue - a signal that would be invisible if the campaign data were discarded.",
             ],
-            "technical_detail": "Bayesian shrinkage: shrunk_rate = (n_replies * segment_rate + lambda * parent_rate) / (n_replies + lambda). For seq_9 in SaaS with ~10 reply events and lambda=100, estimate is ~91% parent, 9% segment-specific.",
+            "technical_detail": "Bayesian shrinkage: shrunk_rate = (n_replies * segment_rate + lambda * parent_rate) / (n_replies + lambda). For seq_9 in SaaS with ~21 reply events and lambda=300, estimate is ~93% parent, 7% segment-specific.",
         },
     ]
 

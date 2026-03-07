@@ -35,17 +35,6 @@ export default function RecommendationCard({ story }: RecommendationCardProps) {
       className="bg-[#141414] border border-[#222222] rounded-lg p-5 transition-opacity"
       style={{ opacity: dismissed ? 0 : 1 }}
     >
-      {/* Status badge */}
-      <span
-        className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium mb-3"
-        style={{
-          backgroundColor: config.color + "20",
-          color: config.color,
-        }}
-      >
-        {config.label}
-      </span>
-
       {/* Headline */}
       <h3 className="text-lg font-bold text-[#ededed] mb-4">{story.headline}</h3>
 

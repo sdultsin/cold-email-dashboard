@@ -4,10 +4,10 @@ import { useInView } from "./useInView";
 import DownArrow from "./DownArrow";
 
 const signals = [
-  'Your "best" campaign ranks #1 on replies but #6 on revenue',
-  "A 7.9% reply rate template has generated $0 in closed deals",
-  "Your actual winner gets half the replies but 2x the revenue",
-  "43% of your segments don't have enough data for real conclusions",
+  'Your "best" campaign ranks #1 on replies but #4 on revenue',
+  "A 5.04% reply rate template generates half the revenue of one with fewer replies",
+  "In manufacturing, your most-sent template produces 3x less revenue per send",
+  "42% of your segments don't have enough data for real conclusions",
 ];
 
 export default function Slide4() {

@@ -4,10 +4,10 @@ import { useInView } from "./useInView";
 import DownArrow from "./DownArrow";
 
 const stats = [
-  { label: "Emails Sent", value: "120,000" },
-  { label: "Reply Rate", value: "3.1%" },
-  { label: "Demos Booked", value: "312" },
-  { label: "Pipeline Value", value: "$2.4M" },
+  { label: "Emails Sent", value: "1.2M" },
+  { label: "Reply Rate", value: "3.0%" },
+  { label: "Demos Booked", value: "5,473" },
+  { label: "Pipeline Value", value: "$14.5M" },
 ];
 
 export default function Slide3() {
