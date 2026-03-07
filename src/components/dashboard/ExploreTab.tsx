@@ -45,6 +45,7 @@ export default function ExploreTab({ data }: ExploreTabProps) {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function ExploreTab({ data }: ExploreTabProps) {
       { role: "assistant", content: response },
     ]);
     setInput("");
+    setShowSuggestions(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -127,10 +129,27 @@ export default function ExploreTab({ data }: ExploreTabProps) {
               {messages.map((msg, i) => (
                 <ChatMessage key={i} role={msg.role} content={msg.content} />
               ))}
+              {showSuggestions && (
+                <div className="mt-2">
+                  <StarterChips onSelect={sendMessage} />
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </>
           )}
         </div>
+
+        {/* Suggested questions toggle */}
+        {messages.length > 0 && (
+          <div className="px-3 pt-2">
+            <button
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              className="text-xs text-[#3b82f6] hover:text-[#60a5fa] transition-colors cursor-pointer"
+            >
+              {showSuggestions ? "Hide suggestions" : "Suggested questions"}
+            </button>
+          </div>
+        )}
 
         {/* Input area */}
         <form

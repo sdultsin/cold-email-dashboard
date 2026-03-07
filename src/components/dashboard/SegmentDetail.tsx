@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { SegmentData, SegmentTemplate, Override, Template } from "@/types/dashboard";
 
 interface SegmentDetailProps {
@@ -27,12 +28,17 @@ const learningStatusColors: Record<string, { bg: string; text: string }> = {
   learning: { bg: "#3b82f620", text: "#3b82f6" },
 };
 
+const TOP_N = 5;
+
 export default function SegmentDetail({
   segment,
   segmentKey,
   overrides,
   templateMap,
 }: SegmentDetailProps) {
+  const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [overridesExpanded, setOverridesExpanded] = useState(false);
+
   if (!segment) {
     return (
       <div className="text-center text-[#666666] py-12 text-sm">
@@ -57,6 +63,9 @@ export default function SegmentDetail({
     if (b.revenue_per_send == null) return -1;
     return b.revenue_per_send - a.revenue_per_send;
   });
+
+  const visibleTemplates = showAllTemplates ? rankedTemplates : rankedTemplates.slice(0, TOP_N);
+  const hasMore = rankedTemplates.length > TOP_N;
 
   // Own data weight (simplified: avg_data_completeness as proxy)
   const ownWeight = Math.min(segment.avg_data_completeness, 1);
@@ -120,7 +129,7 @@ export default function SegmentDetail({
         </div>
       </div>
 
-      {/* Template ranking table */}
+      {/* Template ranking table - top 5 with expand */}
       <div className="bg-[#141414] border border-[#222222] rounded-lg overflow-hidden">
         <div className="px-5 py-3 border-b border-[#222222]">
           <h4 className="text-sm font-medium text-[#ededed]">Template Rankings</h4>
@@ -139,7 +148,7 @@ export default function SegmentDetail({
               </tr>
             </thead>
             <tbody>
-              {rankedTemplates.map((t, i) => {
+              {visibleTemplates.map((t, i) => {
                 const conf = getConfidence(t);
                 const label = templateMap[t.sequence_id]?.label || t.sequence_id;
                 return (
@@ -170,22 +179,58 @@ export default function SegmentDetail({
             </tbody>
           </table>
         </div>
+        {hasMore && (
+          <button
+            onClick={() => setShowAllTemplates(!showAllTemplates)}
+            className="w-full px-5 py-2.5 text-xs text-[#3b82f6] hover:text-[#60a5fa] hover:bg-[#1a1a1a] transition-colors cursor-pointer border-t border-[#1a1a1a]"
+          >
+            {showAllTemplates
+              ? "Show top 5"
+              : `Show all ${rankedTemplates.length} templates`}
+          </button>
+        )}
       </div>
 
-      {/* Override history */}
+      {/* Override history - collapsible */}
       {segOverrides.length > 0 && (
-        <div className="bg-[#141414] border border-[#222222] rounded-lg p-5">
-          <h4 className="text-sm font-medium text-[#ededed] mb-3">Override History</h4>
-          <div className="space-y-3">
-            {segOverrides.map((o) => (
-              <div key={o.id} className="flex gap-3 items-start">
-                <div className="text-xs text-[#3b82f6] font-mono whitespace-nowrap mt-0.5">
-                  Month {o.month}
+        <div className="bg-[#141414] border border-[#222222] rounded-lg overflow-hidden">
+          <button
+            onClick={() => setOverridesExpanded(!overridesExpanded)}
+            className="w-full flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          >
+            <h4 className="text-sm font-medium text-[#ededed]">
+              Override History
+              <span className="ml-2 text-xs text-[#666666] font-normal">
+                ({segOverrides.length})
+              </span>
+            </h4>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#666666"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform ${overridesExpanded ? "rotate-180" : ""}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {overridesExpanded && (
+            <div className="px-5 pb-4 space-y-3 border-t border-[#1a1a1a]">
+              <div className="pt-3" />
+              {segOverrides.map((o) => (
+                <div key={o.id} className="flex gap-3 items-start">
+                  <div className="text-xs text-[#3b82f6] font-mono whitespace-nowrap mt-0.5">
+                    Month {o.month}
+                  </div>
+                  <div className="text-xs text-[#888888] leading-relaxed">{o.reason}</div>
                 </div>
-                <div className="text-xs text-[#888888] leading-relaxed">{o.reason}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
