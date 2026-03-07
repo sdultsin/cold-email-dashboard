@@ -41,6 +41,17 @@ export default function Slide5() {
       className="relative flex h-screen w-full flex-col items-center justify-center px-4"
     >
       <div className="flex w-full max-w-2xl flex-col gap-5">
+        {/* Section title */}
+        <h2
+          className="text-sm font-semibold uppercase tracking-widest text-zinc-500 mb-2"
+          style={{
+            opacity: isInView ? 1 : 0,
+            transition: "opacity 400ms",
+          }}
+        >
+          Three Feedback Loops
+        </h2>
+
         {layers.map((layer, i) => (
           <div
             key={layer.title}
@@ -48,7 +59,7 @@ export default function Slide5() {
             style={{
               opacity: isInView ? 1 : 0,
               transform: isInView ? "translateX(0)" : "translateX(-24px)",
-              transitionDelay: `${i * 200}ms`,
+              transitionDelay: `${i * 200 + 200}ms`,
             }}
           >
             <div className="mb-2 flex items-baseline justify-between">
@@ -73,11 +84,11 @@ export default function Slide5() {
         className="mt-8 max-w-lg text-center text-base font-light text-[#ededed]/70"
         style={{
           opacity: isInView ? 1 : 0,
-          transition: "opacity 600ms 800ms",
+          transition: "opacity 600ms 1000ms",
         }}
       >
         Three feedback loops running at different speeds. Each one corrects the
-        last.
+        last. The system compounds knowledge from every send.
       </p>
 
       <DownArrow />
