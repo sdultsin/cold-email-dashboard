@@ -5,17 +5,17 @@ import { useInView } from "./useInView";
 import DownArrow from "./DownArrow";
 
 const leftSignals = [
-  "Watch time: 14.2s (87% completion)",
-  "Paused at 0:04 (product reveal)",
+  "Watch time: 14.2s, 87% completion",
+  "Paused at 0:04, product reveal",
   "Replayed 1x",
-  "Scroll velocity: slowed before stopping",
-  "Audio: kept on (not muted)",
+  "Scroll velocity slowed before stopping",
+  "Audio kept on, not muted",
   "Skipped next reel in <1s",
 ];
 
 const rightSignals = [
   "Profile tap after viewing",
-  "Read 3 comments (8.4s)",
+  "Read 3 comments, 8.4s total",
   "Scrolled to comments",
   "Saved to collection",
   "3rd reel from this creator this week",
@@ -34,7 +34,7 @@ export default function Slide2() {
         {/* Three-column layout: signals - phone - signals */}
         <div className="flex items-center gap-6 lg:gap-10">
           {/* Left signals */}
-          <div className="hidden sm:flex w-[220px] flex-col gap-3">
+          <div className="hidden sm:flex w-[260px] flex-col gap-3">
             {leftSignals.map((signal, i) => (
               <div
                 key={i}
@@ -79,7 +79,7 @@ export default function Slide2() {
           </div>
 
           {/* Right signals */}
-          <div className="hidden sm:flex w-[220px] flex-col gap-3">
+          <div className="hidden sm:flex w-[260px] flex-col gap-3">
             {rightSignals.map((signal, i) => (
               <div
                 key={i}
