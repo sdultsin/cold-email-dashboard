@@ -1,6 +1,6 @@
 "use client";
 
-type Tab = "recommendations" | "explore";
+type Tab = "recommendations" | "explore" | "the-math";
 
 interface TopBarProps {
   activeTab: Tab;
@@ -10,6 +10,7 @@ interface TopBarProps {
 const tabs: { key: Tab; label: string }[] = [
   { key: "recommendations", label: "Recommendations" },
   { key: "explore", label: "Explore" },
+  { key: "the-math", label: "The Math" },
 ];
 
 export default function TopBar({

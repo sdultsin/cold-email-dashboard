@@ -5,8 +5,9 @@ import { useDashboardData } from "@/lib/data";
 import TopBar from "./TopBar";
 import RecommendationsTab from "./RecommendationsTab";
 import ExploreTab from "./ExploreTab";
+import TheMathTab from "./TheMathTab";
 
-type Tab = "recommendations" | "explore";
+type Tab = "recommendations" | "explore" | "the-math";
 
 export default function Dashboard() {
   const { data, loading, error } = useDashboardData();
@@ -37,6 +38,7 @@ export default function Dashboard() {
       <main>
         {activeTab === "recommendations" && <RecommendationsTab stories={data.stories} />}
         {activeTab === "explore" && <ExploreTab data={data} />}
+        {activeTab === "the-math" && <TheMathTab />}
       </main>
     </div>
   );
