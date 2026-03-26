@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --bg-page: #F5F5F7;
+    --bg-card: #FFFFFF;
+    --bg-hover: #F9F9FB;
+    --border: #E5E5EA;
+    --border-subtle: #F0F0F2;
+    --text-primary: #1D1D1F;
+    --text-secondary: #86868B;
+    --text-tertiary: #AEAEB2;
+    --critical: #FF3B30;
+    --critical-bg: #FFF5F5;
+    --warning: #FF9500;
+    --warning-bg: #FFFBF0;
+    --success: #34C759;
+    --info: #007AFF;
+    --radius: 10px;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body.dark {
+    --bg-page: #1C1C1E;
+    --bg-card: #2C2C2E;
+    --bg-hover: #3A3A3C;
+    --border: #3A3A3C;
+    --border-subtle: #2C2C2E;
+    --text-primary: #F5F5F7;
+    --text-secondary: #8E8E93;
+    --text-tertiary: #636366;
+    --critical-bg: #3A1C1C;
+    --warning-bg: #3A2E1C;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  /* Header */
+  .page-header {
+    margin-bottom: 28px;
+  }
+
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+
+  .page-header .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s, color 0.2s;
+    z-index: 20;
+  }
+
+  .theme-toggle:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
+
+  .theme-toggle svg { width: 24px; height: 24px; }
+
+  /* Status Bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    margin-bottom: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .status-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .verdict-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .verdict-dot.green { background: var(--success); box-shadow: 0 0 6px rgba(52, 199, 89, 0.4); }
+  .verdict-dot.yellow { background: var(--warning); box-shadow: 0 0 6px rgba(255, 149, 0, 0.4); }
+  .verdict-dot.red { background: var(--critical); box-shadow: 0 0 6px rgba(255, 59, 48, 0.4); }
+
+  .verdict-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .run-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .status-bar-right {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  /* Queue section header */
+  .queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px 6px;
+    background: var(--bg-card);
+  }
+
+  .queue-label-text {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+  }
+
+  .btn-copy-all {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--info);
+    background: none;
+    border: 1px solid var(--info);
+    border-radius: 6px;
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 30px;
+  }
+
+  .btn-copy-all:hover {
+    background: var(--info);
+    color: white;
+  }
+
+  .btn-clear-all {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--text-tertiary);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 30px;
+  }
+
+  .btn-clear-all:hover {
+    border-color: var(--critical);
+    color: var(--critical);
+  }
+
+  .queue-header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Queue Items */
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--bg-card);
+    border-bottom: 0.5px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 0.15s;
+    min-height: 52px;
+  }
+
+  .queue-item:last-of-type { border-bottom: none; }
+  .queue-item:hover { background: var(--bg-hover); }
+
+  .source-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .source-badge.source-audit { background: #E3F2FD; color: #1565C0; }
+  .source-badge.source-l2 { background: #F3E5F5; color: #7B1FA2; }
+  body.dark .source-badge.source-audit { background: #1C2D3A; color: #64B5F6; }
+  body.dark .source-badge.source-l2 { background: #2E1C3A; color: #CE93D8; }
+
+  .severity-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .severity-dot.red { background: var(--critical); }
+  .severity-dot.orange { background: var(--warning); }
+  .severity-dot.gray { background: var(--text-tertiary); }
+
+  .item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .item-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .item-chevron {
+    color: var(--text-tertiary);
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+
+  .queue-item.expanded .item-chevron { transform: rotate(90deg); }
+
+  /* Queue Detail (expanded) */
+  .queue-detail {
+    display: none;
+    padding: 16px 20px 20px;
+    background: var(--bg-hover);
+    border-bottom: 0.5px solid var(--border-subtle);
+  }
+
+  .queue-detail.open { display: block; }
+
+  .detail-row {
+    padding: 3px 0;
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .detail-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+
+  .detail-text {
+    font-family: 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    color: var(--text-primary);
+    margin: 8px 0;
+    padding: 10px;
+    background: var(--bg-page);
+    border-radius: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .copy-section {
+    position: relative;
+    margin-top: 8px;
+  }
+
+  .copy-block {
+    font-family: 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    color: var(--text-secondary);
+    padding: 10px;
+    background: var(--bg-page);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .copy-block-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--font);
+    color: var(--info);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-block-btn:hover {
+    background: var(--info);
+    color: white;
+    border-color: var(--info);
+  }
+
+  .finding-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .finding-badge.cc_bug { background: #FFEBEE; color: #C62828; }
+  .finding-badge.noise { background: #F5F5F5; color: #9E9E9E; }
+  .finding-badge.cm_behavior { background: #FFF8E1; color: #F9A825; }
+  .finding-badge.api_issue { background: #FFF3E0; color: #E65100; }
+  .finding-badge.infra { background: #F3E5F5; color: #7B1FA2; }
+  .finding-badge.expected_behavior { background: #F5F5F5; color: #9E9E9E; }
+  .finding-badge.pattern { background: #E8EAF6; color: #283593; }
+
+  body.dark .finding-badge.cc_bug { background: #3A1C1C; color: #FF6B6B; }
+  body.dark .finding-badge.noise { background: #2C2C2E; color: #636366; }
+  body.dark .finding-badge.cm_behavior { background: #3A351C; color: #FFD54F; }
+  body.dark .finding-badge.api_issue { background: #3A2E1C; color: #FF9F0A; }
+  body.dark .finding-badge.infra { background: #2E1C3A; color: #CE93D8; }
+  body.dark .finding-badge.expected_behavior { background: #2C2C2E; color: #636366; }
+  body.dark .finding-badge.pattern { background: #1C1C3A; color: #7986CB; }
+
+  /* Action buttons */
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .btn-dismiss, .btn-copy {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font);
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-secondary);
+    min-height: 34px;
+  }
+
+  .btn-dismiss:hover, .btn-copy:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+  }
+
+  .btn-copy {
+    color: var(--info);
+    border-color: var(--info);
+  }
+
+  .btn-copy:hover {
+    background: var(--info);
+    color: white;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--bg-card);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  .empty-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .empty-meta {
+    font-size: 14px;
+    color: var(--text-tertiary);
+  }
+
+  .empty-detail {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+  }
+
+  /* Queue wrapper for rounded corners */
+  .queue-wrapper {
+    background: var(--bg-card);
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .status-bar + .queue-wrapper { border-top: none; }
+  .status-bar + .empty-state { border-top: none; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  /* No-data empty state gets full radius */
+  .empty-state.full-radius {
+    border-radius: var(--radius);
+  }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    .container { padding: 32px 16px 60px; }
+
+    .status-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .status-bar-right { align-self: flex-end; }
+
+    .item-title { display: none; }
+    .item-time { font-size: 10px; }
+
+    .detail-actions { flex-wrap: wrap; }
+    .btn-dismiss, .btn-copy { min-height: 44px; padding: 8px 16px; }
+    .btn-copy-all, .btn-clear-all { min-height: 44px; padding: 8px 14px; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 21h6"/>
+    <path d="M10 17h4"/>
+    <path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/>
+  </svg>
+</button>
+
+<div class="container">
+  <div class="page-header">
+    <h1>CC Admin</h1>
+    <div class="subtitle">Campaign Control - System Health</div>
+  </div>
+  <div id="status-bar"></div>
+  <div id="action-queue"></div>
+  <div id="empty-state"></div>
+</div>
+
+<script>
+(function() {
+  // --- Config ---
+  const SUPABASE_URL = 'https://kczjvbbpwjrgbvomdawi.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtjemp2YmJwd2pyZ2J2b21kYXdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NTAyNjUsImV4cCI6MjA4OTQyNjI2NX0.4_imO3fSGw5lbGcgttFSLYTnCOnfsJyyTqaKGe6gkIQ';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // --- State ---
+  let latestAudit = null;
+  let investigations = [];
+
+  // --- Helpers ---
+
+  function relativeTime(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function formatET(dateStr) {
+    return new Date(dateStr).toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      month: 'short',
+      day: 'numeric'
+    }) + ' ET';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatDuration(ms) {
+    if (!ms) return '';
+    const s = Math.round(ms / 1000);
+    if (s < 60) return s + 's';
+    return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+  }
+
+  function verdictColor(v) {
+    if (v === 'GREEN') return 'green';
+    if (v === 'YELLOW') return 'yellow';
+    return 'red';
+  }
+
+  function verdictLabel(audit) {
+    if (audit.verdict === 'GREEN') return 'All Clear';
+    if (audit.verdict === 'RED') return 'FAILED';
+    const warns = (audit.checks_warned || 0) + (audit.checks_failed || 0);
+    return warns + ' Warning' + (warns !== 1 ? 's' : '');
+  }
+
+  function getDismissed(runId) {
+    try {
+      return JSON.parse(localStorage.getItem('cc-admin-dismissed-' + runId) || '[]');
+    } catch { return []; }
+  }
+
+  function setDismissed(runId, names) {
+    localStorage.setItem('cc-admin-dismissed-' + runId, JSON.stringify(names));
+  }
+
+  function getSortPriority(item) {
+    if (item.source === 'audit') {
+      if (item.checkStatus === 'FAIL') {
+        return item.checkSeverity === 'CRITICAL' ? 1 : 3;
+      }
+      return 5; // WARN
+    }
+    // L2 investigation
+    var typeMap = {
+      'cc_bug': 2,
+      'infra': 4,
+      'api_issue': 4,
+      'cm_behavior': 6,
+      'pattern': 6,
+      'noise': 7,
+      'expected_behavior': 7
+    };
+    return typeMap[item.findingType] || 6;
+  }
+
+  function getSeverityDot(item) {
+    if (item.source === 'audit') {
+      return item.checkStatus === 'FAIL' ? 'red' : 'orange';
+    }
+    if (item.findingType === 'cc_bug') return 'red';
+    if (item.findingType === 'infra' || item.findingType === 'api_issue') return 'orange';
+    return 'gray';
+  }
+
+  function splitDetail(detail) {
+    if (!detail) return { main: '', copyBlock: '' };
+    var cpIdx = detail.indexOf('COPY-PASTE BLOCK');
+    if (cpIdx === -1) return { main: detail, copyBlock: '' };
+    var searchArea = detail.substring(0, cpIdx);
+    var sepPos = searchArea.lastIndexOf('---');
+    var main = sepPos > -1 ? detail.substring(0, sepPos).trim() : detail.substring(0, cpIdx).trim();
+    var headerEnd = detail.indexOf('\n', cpIdx);
+    var copyBlock = headerEnd > -1 ? detail.substring(headerEnd + 1).trim() : '';
+    return { main: main, copyBlock: copyBlock };
+  }
+
+  function findingTypeLabel(ft) {
+    var labels = {
+      'cc_bug': 'CC Bug',
+      'noise': 'Noise',
+      'cm_behavior': 'CM Behavior',
+      'api_issue': 'API Issue',
+      'infra': 'Infra',
+      'expected_behavior': 'Expected Behavior',
+      'pattern': 'Pattern'
+    };
+    return labels[ft] || ft;
+  }
+
+  function humanize(check, audit) {
+    var a = check.actual || '';
+    var name = check.name;
+    var translations = {
+      run_completion: {
+        FAIL: 'CC eval run failed to complete or wrote wrong version',
+        PASS: 'Eval run completed successfully'
+      },
+      kill_integrity: {
+        FAIL: 'Kills were logged but not written to the dashboard - data gap',
+        PASS: function() { return a; }
+      },
+      dashboard_dedup: {
+        FAIL: 'Duplicate entries found in CM dashboard - CMs may see double items',
+        PASS: function() { return a; }
+      },
+      error_regression: {
+        WARN: function() { return 'Error count spiked above normal - ' + a; },
+        FAIL: 'Error count hit hard ceiling (>10) - something is broken'
+      },
+      ghost_audit: {
+        WARN: function() { return 'Ghost variants detected - CMs re-enabled killed variants. ' + a; },
+        FAIL: 'Ghost variants detected but data is missing - silent write failure'
+      },
+      threshold_math: {
+        FAIL: 'Kill/block math doesn\'t add up - threshold calculation may be wrong',
+        PASS: function() { return a; }
+      },
+      kv_integrity: {
+        WARN: 'Stale rescan keys found in KV (older than 48h) - cleanup may be failing',
+        PASS: function() { return a; }
+      },
+      supabase_sync: {
+        FAIL: 'Database writes missing for this run - data not reaching Supabase',
+        PASS: 'All database tables received writes'
+      },
+      slack_delivery: {
+        WARN: function() {
+          var match = a.match(/(\d+)/);
+          var n = match ? match[1] : '?';
+          return n + ' Slack notifications failed to deliver this run';
+        }
+      },
+      leads_monitoring: {
+        WARN: function() { return 'Lead monitoring errors detected - ' + a; },
+        FAIL: 'Lead monitoring didn\'t run at all this eval'
+      },
+      winner_detection: {
+        FAIL: 'Winner declared with too few opportunities - threshold not applied'
+      },
+      cross_run_consistency: {
+        WARN: function() {
+          if (check.detail && check.detail.includes('workspaces')) {
+            var m = check.detail.match(/(\d+)\s*vs\s*(?:config\s*)?(\d+)/);
+            if (m) return 'Only ' + m[1] + ' of ' + m[2] + ' workspaces processed this run';
+          }
+          if (check.detail && check.detail.includes('campaigns')) {
+            return 'Campaign count changed significantly from recent runs';
+          }
+          if (check.detail && check.detail.includes('variants_disabled')) {
+            return 'Unusually high kill rate compared to recent runs';
+          }
+          return 'Run numbers deviated from recent baseline - ' + a;
+        }
+      },
+      daily_snapshot: {
+        FAIL: 'Daily snapshot not captured today',
+        PASS: function() { return a; }
+      }
+    };
+    var checkT = translations[name];
+    if (!checkT) return check.name + ' - ' + a;
+    var val = checkT[check.status];
+    if (!val) {
+      val = checkT.FAIL || checkT.WARN || checkT.PASS;
+    }
+    if (typeof val === 'function') return val();
+    return val || (check.name + ' - ' + a);
+  }
+
+  function esc(s) { return s || ''; }
+
+  var fixPrompts = {
+    run_completion: function(check, audit) {
+      return 'CC eval run failed to complete or deployed a stale version.\n\n' +
+        'Investigate:\n' +
+        '1. Check Cloudflare Workers deploy logs - did the latest deploy succeed?\n' +
+        '2. Check if WORKER_VERSION in the code matches ' + esc(audit.worker_version) + '\n' +
+        '3. Check run_summaries in Supabase for the last 30 minutes\n\n' +
+        'Expected: ' + esc(check.expected) + '\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    kill_integrity: function(check, audit) {
+      return 'Kills were logged to audit_logs but not written to dashboard_items. This is the 2c3a98b bug class (silent write failure).\n\n' +
+        'Investigate:\n' +
+        '1. Check audit_logs for DISABLED actions this run vs dashboard_items entries\n' +
+        '2. Look for write errors in the worker logs\n' +
+        '3. Check if the dual-write to dashboard_items is happening after the KV write\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    dashboard_dedup: function(check, audit) {
+      return 'Duplicate entries found in dashboard_items table. CMs may see the same item twice.\n\n' +
+        'Investigate:\n' +
+        '1. Query dashboard_items for duplicates: SELECT cm, campaign_id, item_type, step, variant, COUNT(*) FROM dashboard_items WHERE resolved_at IS NULL GROUP BY 1,2,3,4,5 HAVING COUNT(*) > 1\n' +
+        '2. Determine if the dupe came from a race condition or a retry\n' +
+        '3. Delete the newer duplicate, fix the root cause\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    error_regression: function(check, audit) {
+      return 'Error count is significantly higher than the trailing average.\n\n' +
+        'Investigate:\n' +
+        '1. Check run_summaries for error counts over the last 5 runs\n' +
+        '2. Check audit_logs WHERE action = \'ERROR\' for this run to see which campaigns/workspaces errored\n' +
+        '3. Look for patterns - same workspace? Same API call? Instantly rate limiting?\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    ghost_audit: function(check, audit) {
+      return 'Ghost variants detected - these are variants that CC killed but a CM re-enabled.\n\n' +
+        'Investigate:\n' +
+        '1. Check run_summaries.ghost_details for this run to see which variants\n' +
+        '2. Determine which CM re-enabled them and whether it was intentional\n' +
+        '3. If ghost_details is NULL, that\'s a separate bug (silent write failure)\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    threshold_math: function(check, audit) {
+      return 'Kill/block threshold math is inconsistent. The stored ratio doesn\'t match sent/threshold.\n\n' +
+        'Investigate:\n' +
+        '1. Check the audit_log entries flagged in the detail\n' +
+        '2. Recompute: trigger_sent / trigger_threshold should equal trigger_ratio\n' +
+        '3. If effective_threshold exists and opps > 0, verify it equals threshold * OPP_RUNWAY_MULTIPLIER\n' +
+        '4. Check thresholds.ts:resolveThreshold() for the computation logic\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    kv_integrity: function(check, audit) {
+      return 'Stale KV keys found - rescan keys older than 48 hours should have been cleaned up.\n\n' +
+        'Investigate:\n' +
+        '1. List KV keys with prefix "rescan:" and check their timestamps\n' +
+        '2. Check if the rescan cleanup phase is running correctly\n' +
+        '3. These stale keys won\'t cause harm but indicate cleanup isn\'t working\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    supabase_sync: function(check, audit) {
+      return 'Database writes are missing for this run. Core tables didn\'t receive expected data.\n\n' +
+        'Investigate:\n' +
+        '1. Check which table is missing: audit_logs, dashboard_items, or daily_snapshots\n' +
+        '2. Check Supabase connection logs for errors\n' +
+        '3. Check if the worker hit a timeout before completing writes\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    slack_delivery: function(check, audit) {
+      return 'Slack notifications failed to deliver. Likely rate limiting or API errors.\n\n' +
+        'Investigate:\n' +
+        '1. Check notifications table WHERE reply_success = false for this run\n' +
+        '2. Look for Slack API error messages in the worker logs\n' +
+        '3. If rate limiting, check notification volume and spacing\n' +
+        '4. If auth error, check bot token validity\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    leads_monitoring: function(check, audit) {
+      return 'Lead monitoring had errors or didn\'t run.\n\n' +
+        'Investigate:\n' +
+        '1. Check run_summaries for leads_checked and leads_check_errors\n' +
+        '2. If leads_checked = 0, the monitoring phase may have been skipped\n' +
+        '3. If errors > 0, check leads_audit_logs for which campaigns had issues\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    winner_detection: function(check, audit) {
+      return 'A winner was declared with too few opportunities. The WINNER_MIN_OPPS threshold may not be applied.\n\n' +
+        'Investigate:\n' +
+        '1. Check audit_logs WHERE action = \'WINNER_DETECTED\' for this run\n' +
+        '2. Verify trigger_opportunities >= WINNER_MIN_OPPS (5)\n' +
+        '3. Check the winner detection logic in the evaluator\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    cross_run_consistency: function(check, audit) {
+      return 'Run numbers deviated from recent baseline without a config change.\n\n' +
+        'Investigate:\n' +
+        '1. Check run_summaries for the last 5 runs - compare campaigns_evaluated, workspaces_processed, variants_disabled\n' +
+        '2. If workspace count changed: check worker config for the workspace list, verify all workspaces are accessible\n' +
+        '3. If kill rate spiked: check if a new CM was onboarded or thresholds were changed\n' +
+        '4. If campaigns changed: check if CMs added/removed campaigns in Instantly\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    },
+    daily_snapshot: function(check, audit) {
+      return 'Daily snapshot wasn\'t captured today.\n\n' +
+        'Investigate:\n' +
+        '1. Check daily_snapshots table for today\'s date\n' +
+        '2. Check if the snapshot write is happening in the worker\n\n' +
+        'Actual: ' + esc(check.actual) + '\n' +
+        (check.detail ? 'Detail: ' + esc(check.detail) + '\n' : '') +
+        'Run: ' + esc(audit.worker_version) + ' at ' + formatET(audit.run_timestamp);
+    }
+  };
+
+  function buildL2FixPrompt(item) {
+    var parsed = splitDetail(item.detail || '');
+    var typeContext = {
+      'cc_bug': 'This is a confirmed CC bug. Fix the code.',
+      'infra': 'This is an infrastructure issue. Investigate and fix.',
+      'api_issue': 'This is an Instantly API issue. Check if it\'s a known limitation or a new problem.',
+      'cm_behavior': 'This is a CM behavior pattern. May not need a code fix - could need a process change or CM communication.',
+      'noise': 'This was flagged but may be noise. Verify whether action is actually needed.',
+      'expected_behavior': 'This was flagged but appears to be expected behavior. Verify and dismiss if confirmed.',
+      'pattern': 'This is a recurring pattern. Investigate root cause.'
+    };
+    var header = typeContext[item.findingType] || 'Investigate this finding.';
+    var prompt = header + '\n\n';
+    prompt += 'Finding: ' + (item.title || '') + '\n\n';
+    if (parsed.copyBlock) {
+      prompt += parsed.copyBlock;
+    } else if (parsed.main) {
+      prompt += parsed.main;
+    }
+    return prompt;
+  }
+
+  function fallbackPrompt(item) {
+    return 'CC Audit Flag: ' + (item.checkName || '') +
+      '\nStatus: ' + (item.checkStatus || '') +
+      '\nExpected: ' + (item.expected || '-') +
+      '\nActual: ' + (item.actual || '-') +
+      '\nDetail: ' + (item.detail || 'none') +
+      '\nRun: ' + (latestAudit ? (latestAudit.worker_version || 'unknown') + ' at ' + formatET(latestAudit.run_timestamp) : 'unknown');
+  }
+
+  function buildBatchPrompt(items) {
+    var prompts = [];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var text = '';
+      if (item.source === 'audit') {
+        var promptFn = fixPrompts[item.checkName];
+        text = promptFn ? promptFn(item._check, latestAudit) : fallbackPrompt(item);
+      } else {
+        text = buildL2FixPrompt(item);
+      }
+      prompts.push('## Issue ' + (i + 1) + ' [' + (item.source === 'audit' ? 'AUDIT' : 'L2') + ']\n\n' + text);
+    }
+    return 'Follow agents/cc-fix-triage.md to triage and fix these ' + items.length + ' CC findings:\n\n' +
+      prompts.join('\n\n---\n\n');
+  }
+
+  // --- Data Loading ---
+
+  async function loadData() {
+    var results = await Promise.all([
+      sb.from('audit_results')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1),
+      sb.from('investigation_queue')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+    ]);
+
+    latestAudit = results[0].data && results[0].data[0] ? results[0].data[0] : null;
+    investigations = results[1].data || [];
+
+    render();
+  }
+
+  // --- Queue Building ---
+
+  function buildQueueItems() {
+    var items = [];
+
+    // Source A: Health check failures/warnings
+    if (latestAudit && latestAudit.check_results) {
+      var dismissed = getDismissed(latestAudit.id);
+      for (var i = 0; i < latestAudit.check_results.length; i++) {
+        var check = latestAudit.check_results[i];
+        if (check.status !== 'FAIL' && check.status !== 'WARN') continue;
+        if (dismissed.includes(check.name)) continue;
+        items.push({
+          source: 'audit',
+          checkStatus: check.status,
+          checkSeverity: check.severity,
+          checkName: check.name,
+          title: humanize(check, latestAudit),
+          timestamp: latestAudit.run_timestamp,
+          expected: check.expected,
+          actual: check.actual,
+          detail: check.detail,
+          _check: check,
+          sortPriority: getSortPriority({ source: 'audit', checkStatus: check.status, checkSeverity: check.severity })
+        });
+      }
+    }
+
+    // Source B: Pending investigations
+    for (var j = 0; j < investigations.length; j++) {
+      var inv = investigations[j];
+      items.push({
+        source: 'l2',
+        findingType: inv.finding_type,
+        title: inv.summary,
+        timestamp: inv.created_at,
+        invId: inv.id,
+        detail: inv.detail,
+        sortPriority: getSortPriority({ source: 'l2', findingType: inv.finding_type })
+      });
+    }
+
+    items.sort(function(a, b) { return a.sortPriority - b.sortPriority; });
+    return items;
+  }
+
+  // --- Rendering ---
+
+  function render() {
+    var statusBarEl = document.getElementById('status-bar');
+    var actionQueueEl = document.getElementById('action-queue');
+    var emptyStateEl = document.getElementById('empty-state');
+
+    if (!latestAudit) {
+      statusBarEl.innerHTML = '';
+      statusBarEl.style.display = 'none';
+      actionQueueEl.innerHTML = '';
+      actionQueueEl.style.display = 'none';
+      emptyStateEl.style.display = '';
+      emptyStateEl.innerHTML =
+        '<div class="empty-state full-radius">' +
+          '<div class="empty-title">No audit data yet</div>' +
+          '<div class="empty-meta">Audit results will appear after the next CC eval run.</div>' +
+        '</div>';
+      return;
+    }
+
+    var queueItems = buildQueueItems();
+
+    // Always render status bar (verdict derived from visible queue, not server)
+    renderStatusBar(statusBarEl, queueItems.length);
+    statusBarEl.style.display = '';
+
+    if (queueItems.length === 0) {
+      actionQueueEl.innerHTML = '';
+      actionQueueEl.style.display = 'none';
+      emptyStateEl.style.display = '';
+      emptyStateEl.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="empty-title">Nothing to review</div>' +
+        '</div>';
+    } else {
+      emptyStateEl.innerHTML = '';
+      emptyStateEl.style.display = 'none';
+      actionQueueEl.style.display = '';
+      renderQueue(actionQueueEl, queueItems);
+    }
+  }
+
+  function renderStatusBar(el, visibleCount) {
+    // Compute verdict from visible queue items, not server-side verdict
+    var color, label;
+    if (visibleCount === 0) {
+      color = 'green';
+      label = 'All Clear';
+    } else {
+      color = verdictColor(latestAudit.verdict);
+      label = visibleCount + ' Warning' + (visibleCount !== 1 ? 's' : '');
+    }
+
+    el.innerHTML =
+      '<div class="status-bar">' +
+        '<div class="status-bar-left">' +
+          '<span class="verdict-dot ' + color + '"></span>' +
+          '<span class="verdict-label">' + escapeHtml(label) + '</span>' +
+        '</div>' +
+        '<div class="status-bar-right">Last scan: ' + formatET(latestAudit.run_timestamp) + '</div>' +
+      '</div>';
+  }
+
+  function renderQueue(el, items) {
+    var html = '<div class="queue-wrapper">';
+    html += '<div class="queue-header"><span class="queue-label-text">Action Queue - ' + items.length + ' item' + (items.length !== 1 ? 's' : '') + '</span><div class="queue-header-actions"><button class="btn-clear-all">Clear All</button><button class="btn-copy-all">Copy All Fixes</button></div></div>';
+
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var dotColor = getSeverityDot(item);
+      var sourceClass = item.source === 'audit' ? 'source-audit' : 'source-l2';
+      var sourceLabel = item.source === 'audit' ? 'AUDIT' : 'L2';
+
+      // Collapsed row
+      html += '<div class="queue-item" data-idx="' + i + '">';
+      html += '<span class="source-badge ' + sourceClass + '">' + sourceLabel + '</span>';
+      html += '<span class="severity-dot ' + dotColor + '"></span>';
+      html += '<span class="item-title">' + escapeHtml(item.title) + '</span>';
+      html += '<span class="item-time">' + relativeTime(item.timestamp) + '</span>';
+      html += '<span class="item-chevron">&#8250;</span>';
+      html += '</div>';
+
+      // Expanded detail
+      html += '<div class="queue-detail" data-idx="' + i + '">';
+
+      if (item.source === 'audit') {
+        html += '<div class="detail-row"><span class="detail-label">Expected:</span><span>' + escapeHtml(item.expected || '-') + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-label">Actual:</span><span>' + escapeHtml(item.actual || '-') + '</span></div>';
+        html += '<div class="detail-row"><span class="detail-label">Detail:</span><span>' + escapeHtml(item.detail || '-') + '</span></div>';
+        html += '<div class="detail-actions">';
+        html += '<button class="btn-dismiss" data-check="' + escapeHtml(item.checkName) + '">Dismiss</button>';
+        html += '<button class="btn-copy" data-idx="' + i + '">Fix</button>';
+        html += '</div>';
+      } else {
+        // L2 investigation
+        html += '<span class="finding-badge ' + escapeHtml(item.findingType) + '">' + escapeHtml(findingTypeLabel(item.findingType)) + '</span>';
+
+        var parsed = splitDetail(item.detail || '');
+        if (parsed.main) {
+          html += '<div class="detail-text">' + escapeHtml(parsed.main) + '</div>';
+        }
+        if (parsed.copyBlock) {
+          html += '<div class="copy-section">';
+          html += '<div class="copy-block">' + escapeHtml(parsed.copyBlock) + '</div>';
+          html += '<button class="copy-block-btn" data-idx="' + i + '">Copy</button>';
+          html += '</div>';
+        }
+
+        html += '<div class="detail-actions">';
+        html += '<button class="btn-dismiss" data-inv-id="' + escapeHtml(item.invId) + '">Dismiss</button>';
+        html += '<button class="btn-copy" data-idx="' + i + '">Fix</button>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+
+    bindQueueEvents(el, items);
+  }
+
+  // --- Events ---
+
+  function bindQueueEvents(el, items) {
+    // Expand/collapse
+    var rows = el.querySelectorAll('.queue-item');
+    for (var r = 0; r < rows.length; r++) {
+      rows[r].addEventListener('click', function(e) {
+        // Don't toggle if clicking a button inside detail
+        if (e.target.closest('.queue-detail')) return;
+        var idx = this.getAttribute('data-idx');
+        var detail = el.querySelector('.queue-detail[data-idx="' + idx + '"]');
+        var isOpen = this.classList.contains('expanded');
+        // Close all others
+        var allItems = el.querySelectorAll('.queue-item.expanded');
+        var allDetails = el.querySelectorAll('.queue-detail.open');
+        for (var x = 0; x < allItems.length; x++) allItems[x].classList.remove('expanded');
+        for (var x = 0; x < allDetails.length; x++) allDetails[x].classList.remove('open');
+        // Toggle this one
+        if (!isOpen) {
+          this.classList.add('expanded');
+          detail.classList.add('open');
+        }
+      });
+    }
+
+    // Dismiss buttons
+    var dismissBtns = el.querySelectorAll('.btn-dismiss');
+    for (var d = 0; d < dismissBtns.length; d++) {
+      dismissBtns[d].addEventListener('click', function(e) {
+        e.stopPropagation();
+        var btn = this;
+        var checkName = btn.getAttribute('data-check');
+        var invId = btn.getAttribute('data-inv-id');
+        var itemEl = btn.closest('.queue-detail').previousElementSibling;
+        var detailEl = btn.closest('.queue-detail');
+
+        if (checkName) {
+          // Health check dismiss - localStorage
+          var dismissed = getDismissed(latestAudit.id);
+          if (!dismissed.includes(checkName)) {
+            dismissed.push(checkName);
+            setDismissed(latestAudit.id, dismissed);
+          }
+          animateOut(itemEl, detailEl);
+        } else if (invId) {
+          // Investigation dismiss - Supabase write
+          btn.disabled = true;
+          btn.textContent = '...';
+          sb.from('investigation_queue')
+            .update({ status: 'dismissed', resolved_at: new Date().toISOString() })
+            .eq('id', invId)
+            .then(function() {
+              // Remove from local state
+              investigations = investigations.filter(function(inv) { return inv.id !== invId; });
+              animateOut(itemEl, detailEl);
+            })
+            .catch(function(err) {
+              console.error('Failed to dismiss investigation:', err);
+              btn.disabled = false;
+              btn.textContent = 'Dismiss';
+            });
+        }
+      });
+    }
+
+    // Copy Fix Prompt buttons
+    var copyBtns = el.querySelectorAll('.btn-copy');
+    for (var c = 0; c < copyBtns.length; c++) {
+      copyBtns[c].addEventListener('click', function(e) {
+        e.stopPropagation();
+        var btn = this;
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        var item = items[idx];
+        var text = '';
+
+        if (item.source === 'audit') {
+          var promptFn = fixPrompts[item.checkName];
+          text = promptFn ? promptFn(item._check, latestAudit) : fallbackPrompt(item);
+        } else {
+          text = buildL2FixPrompt(item);
+        }
+
+        var singlePrompt = 'Follow agents/cc-fix-triage.md to triage and fix this CC finding:\n\n' + text;
+        navigator.clipboard.writeText(singlePrompt).then(function() {
+          btn.textContent = 'Copied';
+          setTimeout(function() { btn.textContent = 'Fix'; }, 2000);
+        });
+      });
+    }
+
+    // Copy block buttons (inside investigation copy sections)
+    var copyBlockBtns = el.querySelectorAll('.copy-block-btn');
+    for (var cb = 0; cb < copyBlockBtns.length; cb++) {
+      copyBlockBtns[cb].addEventListener('click', function(e) {
+        e.stopPropagation();
+        var btn = this;
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        var item = items[idx];
+        var parsed = splitDetail(item.detail || '');
+        var text = parsed.copyBlock || parsed.main;
+
+        navigator.clipboard.writeText(text).then(function() {
+          btn.textContent = 'Copied';
+          setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+        });
+      });
+    }
+
+    // Copy All Fixes button
+    var copyAllBtn = el.querySelector('.btn-copy-all');
+    if (copyAllBtn) {
+      copyAllBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var btn = this;
+        var text = buildBatchPrompt(items);
+        navigator.clipboard.writeText(text).then(function() {
+          btn.textContent = 'Copied';
+          setTimeout(function() { btn.textContent = 'Copy All Fixes'; }, 2000);
+        });
+      });
+    }
+
+    // Clear All button
+    var clearAllBtn = el.querySelector('.btn-clear-all');
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Clearing...';
+
+        // Dismiss all audit items via localStorage
+        if (latestAudit) {
+          var dismissed = getDismissed(latestAudit.id);
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].source === 'audit' && !dismissed.includes(items[i].checkName)) {
+              dismissed.push(items[i].checkName);
+            }
+          }
+          setDismissed(latestAudit.id, dismissed);
+        }
+
+        // Dismiss all L2 investigations via Supabase
+        var invIds = [];
+        for (var j = 0; j < items.length; j++) {
+          if (items[j].source === 'l2' && items[j].invId) {
+            invIds.push(items[j].invId);
+          }
+        }
+
+        if (invIds.length === 0) {
+          investigations = [];
+          render();
+          return;
+        }
+
+        sb.from('investigation_queue')
+          .update({ status: 'dismissed', resolved_at: new Date().toISOString() })
+          .in('id', invIds)
+          .then(function() {
+            investigations = [];
+            render();
+          })
+          .catch(function(err) {
+            console.error('Failed to clear investigations:', err);
+            btn.disabled = false;
+            btn.textContent = 'Clear All';
+          });
+      });
+    }
+  }
+
+  function animateOut(itemEl, detailEl) {
+    itemEl.style.transition = 'opacity 0.2s, max-height 0.2s';
+    itemEl.style.opacity = '0';
+    itemEl.style.maxHeight = '0';
+    itemEl.style.overflow = 'hidden';
+    detailEl.style.transition = 'opacity 0.2s, max-height 0.2s';
+    detailEl.style.opacity = '0';
+    detailEl.style.maxHeight = '0';
+    detailEl.style.overflow = 'hidden';
+    setTimeout(function() { render(); }, 250);
+  }
+
+  // --- Theme Toggle ---
+
+  var themeBtn = document.getElementById('themeToggle');
+  if (localStorage.getItem('cc-theme') === 'dark') {
+    document.body.classList.add('dark');
+  }
+  themeBtn.addEventListener('click', function() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('cc-theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  });
+
+  // --- Init ---
+
+  loadData();
+  setInterval(loadData, 60000);
+})();
+</script>
+</body>
+</html>
